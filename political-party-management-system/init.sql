@@ -62,7 +62,7 @@ $X$
 $X$ LANGUAGE plpgsql;
 
 
-CREATE FUNCTION member_validation(mem int, passw text) RETURN bool AS
+CREATE FUNCTION member_validation(mem int, passw text) RETURNS bool AS
 $X$
   DECLARE
   m int;
@@ -70,7 +70,7 @@ $X$
   BEGIN
         SELECT id,password INTO m,p FROM member
         WHERE id=mem;
-        IF p=crypt(passw,gen_salt('bf')) THEN
+        IF p = crypt(passw, p) THEN
           RETURN true;
         END IF;
         RETURN false;
@@ -82,7 +82,7 @@ CREATE FUNCTION insert_to_identifiers() RETURNS TRIGGER AS
 $X$
     BEGIN
       INSERT INTO Identifiers(id) VALUES(NEW.id);
-      RETURN
+      RETURN NEW;
     END
 $X$ LANGUAGE plpgsql;
 
@@ -90,7 +90,7 @@ CREATE FUNCTION insert_to_authority_too() RETURNS TRIGGER AS
 $X$
     BEGIN
       INSERT INTO Authority(id) VALUES(NEW.authority);
-      RETURN
+      RETURN NEW;
     END
 $X$ LANGUAGE plpgsql;
 -- CREATE FUNCTION on_insert_to_member() RETURNS TRIGGER AS
@@ -120,4 +120,4 @@ FOR EACH ROW EXECUTE PROCEDURE insert_to_identifiers();
 CREATE TRIGGER on_insert_to_authority BEFORE INSERT ON Authority
 FOR EACH ROW EXECUTE PROCEDURE insert_to_identifiers();
 
-CREATE TRIGGER  BEFORE INSERT ON
+-- CREATE TRIGGER  BEFORE INSERT ON

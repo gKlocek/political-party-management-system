@@ -1,13 +1,12 @@
 import psycopg2
 from read_input import read_input
-from api import man_json
+from api import *
 from initialization import create_database
 input_file='input.txt'
 
 username = 'init'
 password = 'qwerty'
 database = 'projekt'
-
 
 def main():
     lst=read_input(input_file)
