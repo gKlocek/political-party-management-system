@@ -22,7 +22,6 @@ authority int REFERENCES Authority(id)
 CREATE TABLE Action (
 id int PRIMARY KEY,
 projectid int,
-memberid int,
 upvotes int,
 downvotes int,
 type text
@@ -55,7 +54,15 @@ $X$
   END
 $X$ LANGUAGE plpgsql;
 
-CREATE FUNCTION validate_member(mem int, passw text) RETURN bool AS
+CREATE FUNCTION member_exists(memid int) RETURNS bool AS
+$X$
+  BEGIN
+    RETURN EXISTS (SELECT * FROM member WHERE id = memid);
+  END
+$X$ LANGUAGE plpgsql;
+
+
+CREATE FUNCTION member_validation(mem int, passw text) RETURN bool AS
 $X$
   DECLARE
   m int;
@@ -63,9 +70,6 @@ $X$
   BEGIN
         SELECT id,password INTO m,p FROM member
         WHERE id=mem;
-        IF m IS NULL THEN
-          RETURN true
-
         IF p=crypt(passw,gen_salt('bf')) THEN
           RETURN true;
         END IF;
@@ -73,35 +77,42 @@ $X$
   END
 $X$ LANGUAGE plpgsql;
 
-CREATE FUNCTION check_password() RETURNS TRIGGER AS
-$X$
-  BEGIN
-    SELECT id FROM member
-    WHERE
-  END
-$X$
-
 
 CREATE FUNCTION insert_to_identifiers() RETURNS TRIGGER AS
 $X$
     BEGIN
       INSERT INTO Identifiers(id) VALUES(NEW.id);
-      RETURN NEW;
+      RETURN
     END
 $X$ LANGUAGE plpgsql;
 
-CREATE FUNCTION on_insert_to_member() RETURNS TRIGGER AS
+CREATE FUNCTION insert_to_authority_too() RETURNS TRIGGER AS
 $X$
-  BEGIN
-      insert_to_identifiers();
-  END
-$X$
+    BEGIN
+      INSERT INTO Authority(id) VALUES(NEW.authority);
+      RETURN
+    END
+$X$ LANGUAGE plpgsql;
+-- CREATE FUNCTION on_insert_to_member() RETURNS TRIGGER AS
+-- $X$
+--   BEGIN
+--       insert_to_identifiers(NEW.id);
+--       IF password_exists(NEW.password) THEN
+--         RAISE EXCEPTION 'password is already used';
+--       END IF
+--       RETURN NEW;
+--   END
+-- $X$ LANGUAGE plpgsql;
+
 
 CREATE TRIGGER on_insert_to_member BEFORE INSERT ON member
 FOR EACH ROW EXECUTE PROCEDURE insert_to_identifiers();
 
 CREATE TRIGGER on_insert_to_project BEFORE INSERT ON project
 FOR EACH ROW EXECUTE PROCEDURE insert_to_identifiers();
+
+CREATE TRIGGER on_insert_to_project2 BEFORE INSERT ON project
+FOR EACH ROW EXECUTE PROCEDURE insert_to_authority_too();
 
 CREATE TRIGGER on_insert_to_action BEFORE INSERT ON action
 FOR EACH ROW EXECUTE PROCEDURE insert_to_identifiers();
