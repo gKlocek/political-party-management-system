@@ -20,4 +20,3 @@ def add_leader(js,conn):
     conn.commit()
 
 def add_action(js,conn):
-    
