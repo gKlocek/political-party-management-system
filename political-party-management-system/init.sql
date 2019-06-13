@@ -7,7 +7,9 @@ CREATE TABLE Member (
 id int PRIMARY KEY,
 is_leader bool,
 password text,
-last_action_time timestamp
+last_action_time timestamp,
+upvotes int DEFAULT 0,
+downvotes int DEFAULT 0
 );
 
 CREATE TABLE Authority (
@@ -22,25 +24,26 @@ authority int REFERENCES Authority(id)
 CREATE TABLE Action (
 id int PRIMARY KEY,
 projectid int,
-upvotes int,
-downvotes int,
+upvotes int DEFAULT 0,
+downvotes int DEFAULT 0,
 type text
 );
 
 CREATE TABLE Votes (
-memberid int REFERENCES Member(id),
-actionid int REFERENCES Action(id),
-votetype text
+member_id int REFERENCES Member(id),
+action_id int REFERENCES Action(id),
+type text,
+CONSTRAINT pk PRIMARY KEY (member_id, action_id)
 );
 
-CREATE TABLE Project_has_action (
-project_id int REFERENCES Project(id),
-action_id int REFERENCES Action(id)
-);
+-- CREATE TABLE Project_has_action (
+-- project_id int REFERENCES Project(id),
+-- action_id int REFERENCES Action(id)
+-- );
 
 CREATE TABLE Action_has_initiator (
 action_id int REFERENCES Action(id),
-votetype text
+member_id int REFERENCES Member(id)
 );
 
 CREATE TABLE Identifiers (
@@ -93,6 +96,21 @@ $X$
       RETURN NEW;
     END
 $X$ LANGUAGE plpgsql;
+
+CREATE FUNCTION update_votes_count() RETURNS TRIGGER AS
+$X$
+    BEGIN
+        IF NEW.type='upvote' THEN
+          UPDATE member SET upvotes=upvotes+1 WHERE id=NEW.member_id;
+          UPDATE action SET upvotes=upvotes+1 WHERE id=NEW.action_id;
+        ELSE
+          UPDATE member SET downvotes=downvotes+1 WHERE id=NEW.member_id;
+          UPDATE action SET downvotes=downvotes+1 WHERE id=NEW.action_id;
+        END IF;
+        RETURN NEW;
+    END
+$X$ LANGUAGE plpgsql;
+
 -- CREATE FUNCTION on_insert_to_member() RETURNS TRIGGER AS
 -- $X$
 --   BEGIN
@@ -120,4 +138,6 @@ FOR EACH ROW EXECUTE PROCEDURE insert_to_identifiers();
 CREATE TRIGGER on_insert_to_authority BEFORE INSERT ON Authority
 FOR EACH ROW EXECUTE PROCEDURE insert_to_identifiers();
 
+CREATE TRIGGER on_insert_to_votes BEFORE INSERT ON Votes
+FOR EACH ROW EXECUTE PROCEDURE update_votes_count();
 -- CREATE TRIGGER  BEFORE INSERT ON

@@ -1,3 +1,4 @@
+from functions import *
 
 def man_json(js,conn):
     if 'leader' in js:
@@ -6,6 +7,8 @@ def man_json(js,conn):
         add_action(js,conn)
     if 'upvote' in js or 'downvote' in js:
         add_vote(js,conn)
+    if 'actions' in js:
+        get_actions(js,conn)
     if 'trolls' in js:
         trolls(js,conn)
 
@@ -18,7 +21,7 @@ def add_leader(js,conn):
     conn.commit()
 
 # { "protest": { "timestamp": 1557475700, "password": "123", "member": 3, "action":500, "project":5000, "authority":10000}}
-# Action(id,projectid,memberid,upvotes,downvotes,type)
+# Action(id,projectid,upvotes,downvotes,type)
 def add_action(js,conn):
     cur=conn.cursor()
     type = 'protest'
@@ -27,41 +30,75 @@ def add_action(js,conn):
     if update_and_validate(js[type]['timestamp'],js[type]['member'],js[type]['password'],cur):
 #        print('validation proceed succesfully')
         if 'authority' in js[type]:
-#            print('there is authority sratatatatatatat')
             add_project(js[type]['project'],js[type]['authority'],cur)
 
         value = '('+str(js[type]['action'])+','+str(js[type]['project'])+',0,0,'+"'"+type+"'"+')'
         cur.execute('INSERT INTO action(id,projectid,upvotes,downvotes,type) VALUES'+value+';')
+        value = '('+str(js[type]['action'])+','+str(js[type]['member'])+')'
+        cur.execute('INSERT INTO Action_has_initiator(action_id,member_id) VALUES'+value+';')
+    else:
+        conn.rollback()
+    cur.close()
+    conn.commit()
+#downvote <timestamp> <member> <password> <action>
+# votes(member_id,action_id,type)
+def add_vote(js,conn):
+    cur=conn.cursor()
+    type = 'upvote'
+    if type not in js:
+        type='downvote'
+
+    cur.execute('SELECT EXISTS(SELECT * FROM action WHERE id='+str(js[type]['action']) +')')
+    res=cur.fetchone()
+    if not res[0]:
+        raise Exception('voting for non existing action! ');
+        cur.close();
+        conn.rollback();
+
+    if update_and_validate(js[type]['timestamp'],js[type]['member'],js[type]['password'],cur):
+        value = '('+str(js[type]['member'])+','+str(js[type]['action'])+','+"'"+type+"'"+')'
+        cur.execute('INSERT INTO votes(member_id,action_id,type) VALUES'+value+';')
     else:
         conn.rollback()
     cur.close()
     conn.commit()
 
 
-# Project(id,authority)
-def add_project(project,authority,cur):
-    value = '('+str(project)+','+str(authority)+')'
-    cur.execute('INSERT INTO project(id,authority) VALUES'+value+';')
+# actions <timestamp> <member> <password> [ <type> ] [ <project> | <authority> ]
+# { "actions": { "timestamp": 1560169050, "member": 1002, "password": "password2", "type": "support" ,"authority": 10000} }
+def get_actions(js,conn):
+    # print('get_actions for')
+    # print(js)
+    cur = conn.cursor()
+    if update_and_validate(js['actions']['timestamp'],js['actions']['member'],js['actions']['password'],cur):
+        # print('validation of member'+str(js['actions']['member'])+' proceed succesfully')
+        cur.execute('SELECT action.id, type, project.id,authority,upvotes,downvotes FROM action JOIN project ON action.projectid=project.id')
+        res=str(cur.fetchall())[1:-1]
+        if 'type' in js['actions']:
+            type = str(js['actions']['type'])
+            cur.execute(
+            "WITH pom(action,type,project,authority,upvotes,downvotes) AS (SELECT * FROM (VALUES "+res+") AS t (a,t,p,au,u,d)) SELECT * FROM pom WHERE type='"+type+"';"
+            )
+            res=str(cur.fetchall())[1:-1]
 
-def update_timestamp(member,timestamp,cursor):
-    cursor.execute('UPDATE member SET last_action_time= to_timestamp('+str(timestamp)+') WHERE id='+str(member)+';')
+        if 'project' in js['actions']:
+            project=str(js['actions']['project'])
+            cur.execute(
+            "WITH pom(action,type,project,authority,upvotes,downvotes) AS (SELECT * FROM (VALUES "+res+") AS t (a,t,p,au,u,d)) SELECT * FROM pom WHERE project='"+project+"';"
+            )
+            res = cur.fetchone()
 
-def update_and_validate(timestamp,member,password,cursor):
-    # print('updating and validating values: ')
-    # print(str(timestamp)+','+str(member)+','+password)
-    cursor.execute('SELECT EXISTS( SELECT * FROM member WHERE id ='+str(member)+');');
-    res = cursor.fetchone()
-    if res[0]:
-    #    print('member exists')
-        cursor.execute('SELECT member_validation('+str(member)+','+"'"+password+"'"+');');
-        res = cursor.fetchone()
-#        print('member validation result: '+str(res[0]))
-        if res[0]:
-            update_timestamp(member,timestamp,cursor)
-            return True
-        return False
+        if 'authority' in js['actions']:
+            authority=str(js['actions']['authority'])
+            cur.execute(
+            "WITH pom(action,type,project,authority,upvotes,downvotes) AS (SELECT * FROM (VALUES "+res+") AS t (a,t,p,au,u,d)) SELECT * FROM pom WHERE authority='"+authority+"';"
+            )
+            res = cur.fetchone()
+        print(res)
     else:
-        add_member(member,False,password,timestamp,cursor)
-        return True
+        raise Exception('invalid member');
+    cur.close()
+    conn.commit()
+# Project(id,authority)
 
 #def add_vote(js,conn):

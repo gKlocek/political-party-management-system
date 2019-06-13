@@ -20,6 +20,6 @@ def main():
     sz = len(lst)
     for i in range(1,sz):
         man_json(lst[i],my_connection)
-
+        
 if __name__ == '__main__':
     main()
