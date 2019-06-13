@@ -36,11 +36,6 @@ type text,
 CONSTRAINT pk PRIMARY KEY (member_id, action_id)
 );
 
--- CREATE TABLE Project_has_action (
--- project_id int REFERENCES Project(id),
--- action_id int REFERENCES Action(id)
--- );
-
 CREATE TABLE Action_has_initiator (
 action_id int REFERENCES Action(id),
 member_id int REFERENCES Member(id)
@@ -64,6 +59,12 @@ $X$
   END
 $X$ LANGUAGE plpgsql;
 
+CREATE FUNCTION is_active(t timestamp,n timestamp) RETURNS bool AS
+$X$
+  BEGIN
+    RETURN (n-t < '1 year');
+  END
+$X$ LANGUAGE plpgsql;
 
 CREATE FUNCTION member_validation(mem int, passw text) RETURNS bool AS
 $X$

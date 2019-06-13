@@ -1,0 +1,27 @@
+{ "open": { "database": "student", "login": "init", "password": "qwerty"}}
+{ "leader": { "timestamp": 1557473000, "password": "abc", "member": 1}}
+{ "leader": { "timestamp": 1557474000, "password": "dupa123", "member": 2}}
+{ "leader": { "timestamp": 1557484000, "password": "sumkrolemjeziorajaklewkrolemdzungli", "member": 3}}
+{ "leader": { "timestamp": 1557484123, "password": "sdafsdf", "member": 4}}
+{ "protest": { "timestamp": 1557485700, "password": "sumkrolemjeziorajaklewkrolemdzungli", "member": 3, "action":500, "project":5000, "authority":10000}}
+{ "support": { "timestamp": 1557485701, "password": "dupa123", "member": 2, "action":600, "project":5000}}
+{ "support": { "timestamp": 1557485706, "password": "cycki", "member": 5, "action":700, "project":5000}}
+{ "protest": { "timestamp": 1557485700, "password": "sdafsdf", "member": 4, "action":801, "project":6000}}
+{ "protest": { "timestamp": 1557485700, "password": "sdafsdf", "member": 4, "action":901, "project":9000, "authority":20000}}
+{ "upvote": { "timestamp": 1557485707, "password": "dupa123", "member": 2, "action":500}}
+{ "downvote": { "timestamp": 1557485710, "password": "abc", "member": 1, "action":500}}
+{ "downvote": { "timestamp": 1557488020, "password": "cycki", "member": 5, "action":600}}
+{ "upvote": { "timestamp": 1557485707, "password": "dupa123", "member": 2, "action":600}}
+{ "upvote": { "timestamp": 1557485710, "password": "abc", "member": 1, "action":600}}
+{ "actions": { "timestamp": 1560169050, "member": 1, "password": "abc" } }
+{ "actions": { "timestamp": 1560169050, "member": 1, "password": "abc", "type": "support" } }
+{ "actions": { "timestamp": 1560169050, "member": 1, "password": "abc","authority": 10000} }
+{ "actions": { "timestamp": 1560169050, "member": 1, "password": "abc","project": 5000} }
+{ "actions": { "timestamp": 1560169050, "member": 2, "password": "dupa123","authority": 20000} }
+{ "projects": { "timestamp": 1560169145, "member": 4, "password": "sdafsdf" } }
+{ "projects": { "timestamp": 1560169150, "member": 1005, "password": "password5", "authority": 20000 } }
+{ "votes": { "timestamp": 1557475705, "password": "abc", "member": 1}}
+{ "votes": { "timestamp": 1557475705, "password": "abc", "member": 1,"action":500}}
+{ "votes": { "timestamp": 1557475705, "password": "password20", "member": 20,"project":5000}}
+{ "trolls" :  { "timestamp": 1560169159 } }
+{ "trolls" :  { "timestamp": 1560171234 } }
